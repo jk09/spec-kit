@@ -1,0 +1,45 @@
+name: spec-check
+
+on:
+  pull_request:
+    paths: ["specs/**", "scripts/spec_*.py", ".github/workflows/spec-check.yml"]
+  push:
+    branches: [main]
+    paths: ["specs/**", "scripts/spec_*.py", ".github/workflows/spec-check.yml"]
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Specs (with evolution rules against the base branch)
+        if: github.event_name == 'pull_request'
+        run: python scripts/spec_check.py --strict --base "origin/${{ github.base_ref }}"
+      - name: Specs
+        if: github.event_name == 'push'
+        run: python scripts/spec_check.py --strict
+
+  models:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        if: hashFiles('specs/models/MDL-*.md') != ''
+        with:
+          python-version: "3.12"
+      - uses: actions/setup-java@v4
+        if: hashFiles('specs/models/MDL-*.md') != ''
+        with:
+          distribution: temurin
+          java-version: "21"
+      - name: Fetch TLC
+        if: hashFiles('specs/models/MDL-*.md') != ''
+        run: python scripts/spec_model.py fetch-tlc
+      - name: Model-check
+        if: hashFiles('specs/models/MDL-*.md') != ''
+        run: python scripts/spec_model.py run --all
