@@ -1,0 +1,6 @@
+__pycache__/
+*.pyc
+specs/_work/*
+!specs/_work/.gitignore
+tools/tla2tools.jar
+.venv/
