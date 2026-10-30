@@ -6,8 +6,8 @@ A platform-independent kit for keeping specifications of a coding project consis
 - Notation: EARS requirements plus a small TLA+-flavoured state, action and invariant language, with Design-by-Contract fields (`Pre`, `Post`, `Writes`, `Preserves`, `Errors`, module `OP` contracts).
 - Evolution: versions, ADRs, retired IDs, `compat` rules, pinned references; checked against a git base.
 - Skills for Claude Code: `spec-clarify` (interview), `spec-write`, `spec-model` (TLC), `spec-handoff` (GitHub issues).
-- Scripts (Python 3.8+, standard library): `spec_check.py`, `spec_model.py`, `spec_trace.py`, `spec_handoff.py`.
-- CI: `.github/workflows/spec-check.yml`.
+- Scripts (Python 3.8+, standard library): `spec_check.py`, `spec_model.py`, `spec_trace.py`, `spec_handoff.py`, `spec_guard.py`.
+- CI: `.github/workflows/spec-check.yml`, `spec-enforce.yml`; `CODEOWNERS` for spec ownership; `PORTING.md` for other agents.
 
 No language or framework is assumed.
 

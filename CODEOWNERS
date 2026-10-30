@@ -1,0 +1,6 @@
+# Replace @your-org/spec-owners with the people who approve behaviour changes.
+# Pair with branch protection: "Require review from Code Owners".
+/specs/        @your-org/spec-owners
+/CLAUDE.md     @your-org/spec-owners
+/.claude/      @your-org/spec-owners
+/scripts/spec_*.py @your-org/spec-owners

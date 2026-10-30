@@ -11,6 +11,11 @@ Contents mirror a repo root.
 | `scripts/spec_trace.py` | traceability: contracts without code or tests; contracts as JSON |
 | `scripts/spec_handoff.py` | generates GitHub issue drafts from accepted specs |
 | `.github/workflows/spec-check.yml` | CI: checker on every spec change, models when any exist |
+| `.github/workflows/spec-enforce.yml` | CI on every PR: spec/implementation separation, strict traceability (vars `SPEC_SRC`, `SPEC_TESTS`), kit tests |
+| `scripts/spec_guard.py` | fails a PR that mixes normative spec changes with implementation |
+| `CODEOWNERS` | spec owners review `specs/`, `CLAUDE.md`, skills and scripts; edit the team name |
+| `PORTING.md` | using the kit with agents other than Claude Code |
+| `tests_kit/` | tests for the kit's scripts; not needed in your repo |
 | `CLAUDE.md` | rules for Claude Code; append to your own if you have one |
 | `examples/salon/` | worked example with a model; not needed in your repo |
 
@@ -19,7 +24,7 @@ Contents mirror a repo root.
 2. `python scripts/spec_check.py --write-index` should print `0 errors`.
 3. Optional: try the example. `python scripts/spec_check.py --root examples/salon/specs`, then `python scripts/spec_model.py fetch-tlc` and `python scripts/spec_model.py --root examples/salon/specs run --all`.
 4. In Claude Code: `use spec-clarify: <your rough idea>`, then `spec-write`, optionally `spec-model`.
-5. Implementation: Claude Code follows `CLAUDE.md` (contracts, ID mentions in code and tests); check with `python scripts/spec_trace.py coverage --src <dirs> --tests <dirs>`.
+5. Implementation: Claude Code follows `CLAUDE.md` (contracts, ID mentions in code and tests); check with `python scripts/spec_trace.py coverage --strict --src <dirs> --tests <dirs>`.
 6. Review and merge the spec PR (set `status: accepted`), then `use spec-handoff`. It needs `gh` logged in and creates issues only after you confirm.
 
 ## Notes
