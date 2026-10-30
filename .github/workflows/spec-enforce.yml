@@ -38,11 +38,13 @@ jobs:
 
   kit-tests:
     name: kit scripts
-    if: hashFiles('tests_kit/**') != ''
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
+        if: hashFiles('tests_kit/**') != ''
         with:
           python-version: "3.12"
-      - run: python -m unittest discover -s tests_kit
+      - name: Kit tests
+        if: hashFiles('tests_kit/**') != ''
+        run: python -m unittest discover -s tests_kit
