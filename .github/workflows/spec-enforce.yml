@@ -30,11 +30,13 @@ jobs:
         env:
           SRC: ${{ vars.SPEC_SRC || 'src' }}
           TESTS: ${{ vars.SPEC_TESTS || 'tests' }}
+          # set repository variable SPEC_TRACE_DECLARED=true to require IDs on annotation/declaration lines in tests
+          MODE: ${{ vars.SPEC_TRACE_DECLARED == 'true' && '--declared' || '--strict' }}
         run: |
           args=()
           for d in $SRC; do args+=(--src "$d"); done
           for d in $TESTS; do args+=(--tests "$d"); done
-          python scripts/spec_trace.py coverage --strict "${args[@]}"
+          python scripts/spec_trace.py coverage "$MODE" "${args[@]}"
 
   kit-tests:
     name: kit scripts

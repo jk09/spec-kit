@@ -28,5 +28,6 @@ Contents mirror a repo root.
 6. Review and merge the spec PR (set `status: accepted`), then `use spec-handoff`. It needs `gh` logged in and creates issues only after you confirm.
 
 ## Notes
+- Stricter evidence: set repository variable `SPEC_TRACE_DECLARED=true` (or pass `--declared`) so a test counts only when its ID sits on an annotation or test-declaration line, e.g. `@pytest.mark.spec("REQ-001")` or `it("REQ-001 rejects ...")`.
 - The CI model job downloads TLC from the official release and checks its SHA-256; it does nothing while `specs/models/` is empty.
 - Keep `specs/_work/` out of git (it ships with a `.gitignore`).
