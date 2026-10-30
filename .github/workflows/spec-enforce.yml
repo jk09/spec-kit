@@ -1,0 +1,50 @@
+name: spec-enforce
+
+# Runs on every pull request (no path filter) so implementation PRs are checked too.
+on:
+  pull_request:
+
+jobs:
+  guard:
+    name: specs and implementation stay in separate PRs
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python scripts/spec_guard.py --base "origin/${{ github.base_ref }}"
+
+  trace:
+    name: every accepted contract has code and tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      # Set repository variables SPEC_SRC and SPEC_TESTS (space-separated directories) if yours differ.
+      - name: Coverage
+        env:
+          SRC: ${{ vars.SPEC_SRC || 'src' }}
+          TESTS: ${{ vars.SPEC_TESTS || 'tests' }}
+        run: |
+          args=()
+          for d in $SRC; do args+=(--src "$d"); done
+          for d in $TESTS; do args+=(--tests "$d"); done
+          python scripts/spec_trace.py coverage --strict "${args[@]}"
+
+  kit-tests:
+    name: kit scripts
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        if: hashFiles('tests_kit/**') != ''
+        with:
+          python-version: "3.12"
+      - name: Kit tests
+        if: hashFiles('tests_kit/**') != ''
+        run: python -m unittest discover -s tests_kit

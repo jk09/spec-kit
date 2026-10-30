@@ -25,4 +25,4 @@ Behaviour is defined by `specs/` (conventions: `specs/README.md`). Specs are the
 - `spec-handoff`: turns accepted specs into GitHub issues that cite IDs.
 
 ### Before every commit
-`python scripts/spec_check.py --strict --base origin/main` must pass. In implementation PRs, also `python scripts/spec_trace.py coverage --src <source dirs> --tests <test dirs> --spec <IDs of the issue>`. If you changed behaviour that a model covers, `python scripts/spec_model.py run --all` must pass too. Never edit `specs/` in a feature PR.
+`python scripts/spec_check.py --strict --base origin/main` must pass. In implementation PRs, also `python scripts/spec_trace.py coverage --strict --src <source dirs> --tests <test dirs> --spec <IDs of the issue>`. If you changed behaviour that a model covers, `python scripts/spec_model.py run --all` must pass too. Never edit `specs/` in a feature PR (`scripts/spec_guard.py` and CI enforce this).

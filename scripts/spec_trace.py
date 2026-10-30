@@ -3,6 +3,7 @@
 
   python scripts/spec_trace.py coverage --src src --tests tests     which contracts have no code or test
   python scripts/spec_trace.py coverage --spec FEAT-x               limit to named specs
+  python scripts/spec_trace.py coverage --strict                    ignore IDs that appear only in comment lines
   python scripts/spec_trace.py export [--out contracts.json] [--all] machine-readable contracts
 
 Convention (any language): code that enforces a contract mentions its ID anywhere in the file
@@ -24,9 +25,10 @@ from spec_check import ID_RE, csv, load_specs, parse_errors  # noqa: E402
 
 SKIP_DIRS = {".git", "node_modules", "dist", "build", "target", "venv", ".venv", "__pycache__", "out", "vendor"}
 MAX_BYTES = 1_000_000
+COMMENT_PREFIXES = ("#", "//", "/*", "*", "--", ";", "<!--", "%", "rem ")
 
 
-def scan(dirs, exclude):
+def scan(dirs, exclude, code_only=False):
     hits = {}
     for d in dirs:
         base = Path(d)
@@ -44,8 +46,11 @@ def scan(dirs, exclude):
                 continue
             if b"\0" in raw[:2048]:
                 continue
-            for m in ID_RE.finditer(raw.decode("utf-8", errors="ignore")):
-                hits.setdefault(m.group(1), set()).add(p.as_posix())
+            for line in raw.decode("utf-8", errors="ignore").splitlines():
+                if code_only and line.lstrip().lower().startswith(COMMENT_PREFIXES):
+                    continue
+                for m in ID_RE.finditer(line):
+                    hits.setdefault(m.group(1), set()).add(p.as_posix())
     return hits
 
 
@@ -103,6 +108,8 @@ def main():
     c.add_argument("--src", action="append", default=None)
     c.add_argument("--tests", action="append", default=None)
     c.add_argument("--spec", action="append", default=[])
+    c.add_argument("--strict", action="store_true",
+                   help="count an ID only on a non-comment line (name, annotation, string)")
     c.add_argument("--exclude", action="append", default=[], help="extra directory names to skip")
     e = sub.add_parser("export")
     e.add_argument("--out")
@@ -122,8 +129,8 @@ def main():
         else:
             sys.stdout.write(text)
         return
-    src = scan(a.src or ["src"], a.exclude)
-    tests = scan(a.tests or ["tests"], a.exclude)
+    src = scan(a.src or ["src"], a.exclude, a.strict)
+    tests = scan(a.tests or ["tests"], a.exclude, a.strict)
     todo = items(specs, set(a.spec))
     if not todo:
         print("no accepted specs in scope")
