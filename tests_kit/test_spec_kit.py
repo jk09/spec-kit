@@ -50,6 +50,14 @@ class Trace(unittest.TestCase):
             self.assertNotIn("REQ-001", strict)
             self.assertIn("REQ-002", strict)
 
+    def test_declared_requires_annotation_or_declaration_line(self):
+        with tempfile.TemporaryDirectory() as d:
+            d = Path(d)
+            (d / "a.py").write_text("X = 'REQ-001'\n@pytest.mark.spec('REQ-002')\ndef f(): pass\n")
+            (d / "b.js").write_text("it('REQ-003 rejects', () => {})\nconst y = 'REQ-004'\n")
+            hits = spec_trace.scan([d], [], code_only=True, declared_only=True)
+            self.assertEqual(sorted(hits), ["REQ-002", "REQ-003"])
+
     def test_export_contains_actions(self):
         r = run("scripts/spec_trace.py", "--root", SALON, "export")
         data = json.loads(r.stdout)

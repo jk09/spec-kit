@@ -4,6 +4,7 @@
   python scripts/spec_trace.py coverage --src src --tests tests     which contracts have no code or test
   python scripts/spec_trace.py coverage --spec FEAT-x               limit to named specs
   python scripts/spec_trace.py coverage --strict                    ignore IDs that appear only in comment lines
+  python scripts/spec_trace.py coverage --declared                  tests: ID must sit on an annotation or test-declaration line
   python scripts/spec_trace.py export [--out contracts.json] [--all] machine-readable contracts
 
 Convention (any language): code that enforces a contract mentions its ID anywhere in the file
@@ -17,6 +18,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import sys
 from pathlib import Path
 
@@ -25,10 +27,13 @@ from spec_check import ID_RE, csv, load_specs, parse_errors  # noqa: E402
 
 SKIP_DIRS = {".git", "node_modules", "dist", "build", "target", "venv", ".venv", "__pycache__", "out", "vendor"}
 MAX_BYTES = 1_000_000
+# a line that declares or annotates a test, in common frameworks (pytest, unittest, jest, JUnit, xUnit, Go, Rust)
+DECLARATION_RE = re.compile(
+    r"^\s*(@|\[|#\[)|\b(def\s+test|it\s*\(|test\s*\(|describe\s*\(|func\s+Test|fn\s+test|void\s+test|public\s+void)", re.I)
 COMMENT_PREFIXES = ("#", "//", "/*", "*", "--", ";", "<!--", "%", "rem ")
 
 
-def scan(dirs, exclude, code_only=False):
+def scan(dirs, exclude, code_only=False, declared_only=False):
     hits = {}
     for d in dirs:
         base = Path(d)
@@ -48,6 +53,8 @@ def scan(dirs, exclude, code_only=False):
                 continue
             for line in raw.decode("utf-8", errors="ignore").splitlines():
                 if code_only and line.lstrip().lower().startswith(COMMENT_PREFIXES):
+                    continue
+                if declared_only and not DECLARATION_RE.search(line):
                     continue
                 for m in ID_RE.finditer(line):
                     hits.setdefault(m.group(1), set()).add(p.as_posix())
@@ -110,6 +117,8 @@ def main():
     c.add_argument("--spec", action="append", default=[])
     c.add_argument("--strict", action="store_true",
                    help="count an ID only on a non-comment line (name, annotation, string)")
+    c.add_argument("--declared", action="store_true",
+                   help="implies --strict; in tests an ID counts only on an annotation or test-declaration line")
     c.add_argument("--exclude", action="append", default=[], help="extra directory names to skip")
     e = sub.add_parser("export")
     e.add_argument("--out")
@@ -129,8 +138,8 @@ def main():
         else:
             sys.stdout.write(text)
         return
-    src = scan(a.src or ["src"], a.exclude, a.strict)
-    tests = scan(a.tests or ["tests"], a.exclude, a.strict)
+    src = scan(a.src or ["src"], a.exclude, a.strict or a.declared)
+    tests = scan(a.tests or ["tests"], a.exclude, a.strict or a.declared, a.declared)
     todo = items(specs, set(a.spec))
     if not todo:
         print("no accepted specs in scope")
